@@ -1,0 +1,469 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Examination - C++ OOP DSA</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;padding:18px;font-family:Arial,sans-serif;
+ background:linear-gradient(135deg,#667eea,#764ba2,#f093fb);
+ color:#29264b
+}
+.container{max-width:1150px;margin:auto}
+header{
+ background:linear-gradient(120deg,#211e65,#7047bd);
+ color:white;text-align:center;padding:25px;border-radius:18px;
+ margin-bottom:20px
+}
+header h1{margin:0 0 10px}
+.card{
+ background:white;padding:22px;border-radius:16px;
+ margin-bottom:18px;box-shadow:0 5px 20px #2222
+}
+h2{color:#5847b2;margin-top:0}
+input{
+ width:100%;padding:13px;margin:8px 0 15px;
+ border:2px solid #ddd;border-radius:9px;font-size:15px
+}
+button{
+ border:0;padding:12px 18px;border-radius:9px;
+ cursor:pointer;font-weight:bold;margin:3px
+}
+button:hover{opacity:.85}
+.primary{background:#6254d9;color:white}
+.success{background:#159d73;color:white}
+.danger{background:#e84b68;color:white}
+.light{background:#eeeaff;color:#5142a5}
+video{
+ width:260px;height:180px;background:#17172e;
+ object-fit:cover;border-radius:12px
+}
+.camera{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.hidden{display:none!important}
+.info{
+ display:flex;gap:10px;justify-content:space-between;
+ flex-wrap:wrap;margin-bottom:15px
+}
+.pill{
+ background:#eeeaff;color:#5142a5;
+ padding:10px 14px;border-radius:25px;font-weight:bold
+}
+.timer{background:#ffe5e9;color:#d72650}
+.progress{height:9px;background:#eee;border-radius:10px;margin:15px 0}
+#bar{height:100%;width:0;background:#6254d9;border-radius:10px}
+.layout{display:grid;grid-template-columns:1fr 250px;gap:18px}
+#question{font-size:19px;line-height:1.5;margin:20px 0}
+.option{
+ display:block;padding:14px;border:2px solid #e6e4f3;
+ border-radius:10px;margin:10px 0;cursor:pointer
+}
+.option:hover{background:#f4f1ff}
+.option.selected{background:#e9e5ff;border-color:#6254d9}
+.option input{width:auto;margin:0 10px 0 0}
+.palette{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.palette button{background:#eee;color:#333;padding:10px 0}
+.palette button.answered{background:#159d73;color:white}
+.palette button.current{outline:3px solid #6254d9}
+.actions{display:flex;justify-content:space-between;flex-wrap:wrap;margin-top:20px}
+.score{font-size:52px;color:#6254d9;font-weight:bold;margin:15px}
+.review{padding:15px;background:#f6f5ff;border-radius:10px;margin:12px 0}
+.correct{color:green;font-weight:bold}
+.wrong{color:#d72650;font-weight:bold}
+.small{font-size:13px;color:#777}
+@media(max-width:750px){
+ body{padding:9px}.layout{grid-template-columns:1fr}
+ video{width:100%}
+}
+@media print{
+ body{background:white;padding:0}
+ header,#setup,#test,.no-print{display:none!important}
+ #result{display:block!important}
+ .card{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+ <h1>🎓 GATE Practice Examination</h1>
+ <p>C++ Fundamentals | Object Oriented Programming | Data Structures</p>
+ <p>100 Questions | 70 Minutes | 100 Marks</p>
+</header>
+
+<section class="card" id="setup">
+ <h2>👨‍🎓 Student Registration</h2>
+ <label>Student Name</label>
+ <input id="name" placeholder="Enter student name">
+ <label>Roll Number</label>
+ <input id="roll" placeholder="Enter roll number">
+
+ <h2>📷 Camera Setup</h2>
+ <div class="camera">
+  <video id="video" autoplay muted playsinline></video>
+  <div>
+   <button class="success" onclick="enableCamera()">Enable Camera</button>
+   <button class="danger" onclick="stopCamera()">Stop Camera</button>
+   <p id="cameraStatus">Camera not enabled.</p>
+   <p class="small">Camera preview only. No recording or face tracking.</p>
+  </div>
+ </div>
+
+ <h2>📋 Instructions</h2>
+ <ul style="line-height:2">
+  <li>Total 100 MCQ questions.</li>
+  <li>Time duration: 70 minutes.</li>
+  <li>Each question carries 1 mark.</li>
+  <li>No negative marking.</li>
+  <li>All questions are compulsory to attempt for maximum marks.</li>
+  <li>Submit the test before the timer ends.</li>
+ </ul>
+ <button class="primary" style="width:100%" onclick="startTest()">
+  🚀 Start Examination
+ </button>
+</section>
+
+<section id="test" class="hidden">
+ <div class="info">
+  <span class="pill" id="studentInfo"></span>
+  <span class="pill timer">⏱ <span id="timer">70:00</span></span>
+  <span class="pill">Question <span id="number">1</span>/100</span>
+ </div>
+ <div class="progress"><div id="bar"></div></div>
+
+ <div class="layout">
+  <div class="card">
+   <span class="pill" id="section"></span>
+   <div id="question"></div>
+   <div id="options"></div>
+   <div class="actions">
+    <button class="light" onclick="previous()">⬅ Previous</button>
+    <button class="primary" onclick="next()">Next ➡</button>
+   </div>
+  </div>
+
+  <div class="card">
+   <h2>Question Palette</h2>
+   <p class="small">🟣 Current &nbsp; 🟢 Answered</p>
+   <div class="palette" id="palette"></div>
+   <p>Answered: <b id="count">0</b>/100</p>
+   <button class="danger" style="width:100%" onclick="submitTest()">
+    Submit Test
+   </button>
+  </div>
+ </div>
+</section>
+
+<section class="card hidden" id="result">
+ <h2>🏆 Examination Result</h2>
+ <p id="studentResult"></p>
+ <div class="score" id="score"></div>
+ <h3 id="percentage"></h3>
+ <div id="summary"></div>
+ <p id="message"></p>
+ <div class="no-print" style="margin:20px 0">
+  <button class="primary" onclick="window.print()">📄 Save Result PDF</button>
+  <button class="success" onclick="retest()">🔄 Retest</button>
+ </div>
+ <hr>
+ <h2>📖 Answer Review</h2>
+ <div id="review"></div>
+</section>
+</div>
+
+<script>
+// FORMAT: [Section, Question, Option A, Option B, Option C, Option D, Correct Index, Explanation]
+
+const Q = [
+/* ================= C++ FUNDAMENTALS: 30 ================= */
+["C++ Basics","Which symbol is used to end a statement in C++?",";"," :",".",",",0,"A semicolon ends most C++ statements."],
+["C++ Basics","Which function is the starting point of a C++ program?","start()","main()","begin()","run()",1,"Execution starts from main()."],
+["C++ Basics","Which header file is commonly used for cout and cin?","stdio.h","iostream","string.h","math.h",1,"iostream provides standard input and output streams."],
+["C++ Basics","Which object is used to display output in C++?","cin","cout","print","input",1,"cout displays output."],
+["C++ Basics","Which object is used to take input in C++?","cout","cin","get","read",1,"cin reads input."],
+["C++ Basics","Which keyword declares an integer variable?","float","char","int","double",2,"int declares an integer."],
+["C++ Basics","Which data type stores a single character?","int","char","float","bool",1,"char stores a character."],
+["C++ Basics","Which data type stores true or false?","int","bool","char","string",1,"bool stores Boolean values."],
+["C++ Basics","Which operator is used for addition?","-","+","*","/",1,"The plus operator performs addition."],
+["C++ Basics","Which operator checks equality?","=","==","!=","<=",1,"Double equals compares two values."],
+["C++ Basics","Which statement is used for decision making?","if","for","break","cout",0,"if executes code based on a condition."],
+["C++ Basics","Which statement provides an alternative when if is false?","switch","else","continue","return",1,"else is the alternative branch."],
+["C++ Basics","Which statement is useful for selecting among multiple fixed cases?","if only","switch","while","goto",1,"switch selects a matching case."],
+["C++ Basics","Which keyword exits a switch case?","stop","exit","break","continue",2,"break exits the switch."],
+["C++ Basics","Which loop executes at least once?","for","while","do-while","none",2,"do-while checks its condition after execution."],
+["C++ Basics","Which loop is commonly used when the number of repetitions is known?","for","if","switch","else",0,"for loops are useful for counted repetition."],
+["C++ Basics","Which keyword skips the current loop iteration?","break","continue","return","exit",1,"continue skips to the next iteration."],
+["C++ Basics","Which keyword terminates a loop immediately?","continue","break","case","default",1,"break terminates the loop."],
+["C++ Basics","What is the output of cout << 2+3;?","23","5","2+3","Error",1,"2 + 3 evaluates to 5."],
+["C++ Basics","How many times does for(int i=1;i<=3;i++) execute?","2","3","4","Infinite",1,"It executes for i equal to 1, 2 and 3."],
+["C++ Basics","Which keyword is used to define a function's returned value?","return","break","continue","case",0,"return sends a value back to the caller."],
+["C++ Basics","A function is mainly used to:","Repeat code manually","Organize reusable code","Stop compiler","Create header only",1,"Functions help organize and reuse code."],
+["C++ Basics","Which brackets are used for function parameters?","{}","[]","()","<>",2,"Parentheses contain function parameters."],
+["C++ Basics","Which keyword represents a function that returns no value?","null","void","empty","zero",1,"void means no return value."],
+["C++ Basics","Which index refers to the first element of a C++ array?","1","-1","0","2",2,"C++ arrays use zero-based indexing."],
+["C++ Basics","Which declaration creates an array of 5 integers?","int a;","int a[5];","array a(5);","int[5] a;",1,"int a[5] declares five integer elements."],
+["C++ Basics","How many elements are in int a[10]?","9","10","11","Depends on values",1,"The array has ten elements."],
+["C++ Basics","Which loop is commonly used to traverse an array?","for","switch","if","else",0,"A for loop can visit each array index."],
+["C++ Basics","What is the output of int x=5; x++; cout<<x;?","4","5","6","Error",2,"Post-increment increases x by one."],
+["C++ Basics","Which operator gives the remainder after division?","/","%","*","+ ",1,"The modulo operator gives the remainder."],
+
+/* ================= OOP INTERMEDIATE: 35 ================= */
+["OOP","What does OOP stand for?","Object Oriented Programming","Object Operating Program","Open Object Process","Ordered Operation Program",0,"OOP means Object Oriented Programming."],
+["OOP","Which is a basic building block of OOP?","Loop","Object","Operator","Header",1,"Objects are the central entities in OOP."],
+["OOP","A class is best described as:","A loop","A blueprint for objects","A variable only","A function call",1,"A class defines the structure and behaviour of objects."],
+["OOP","An object is:","An instance of a class","A header file","A data type only","A loop",0,"An object is an instance of a class."],
+["OOP","Which feature combines data and functions into one unit?","Inheritance","Encapsulation","Recursion","Iteration",1,"Encapsulation combines data and methods."],
+["OOP","Which feature hides unnecessary implementation details?","Abstraction","Compilation","Iteration","Overloading",0,"Abstraction exposes essential features and hides implementation details."],
+["OOP","Which feature allows one class to acquire properties of another?","Polymorphism","Inheritance","Encapsulation","Recursion",1,"Inheritance enables reuse from a base class."],
+["OOP","Which feature allows one interface to have multiple forms?","Abstraction","Polymorphism","Compilation","Looping",1,"Polymorphism means many forms."],
+["OOP","Which access specifier allows access from outside the class?","private","protected","public","local",2,"Public members are accessible through objects."],
+["OOP","Which access specifier restricts direct access outside a class?","public","private","global","external",1,"Private members cannot be accessed directly from outside."],
+["OOP","Which access specifier is accessible in derived classes?","protected","private only","global","friend only",0,"Protected members are accessible in derived classes."],
+["OOP","What is the default access specifier in a C++ class?","public","private","protected","friend",1,"Class members are private by default."],
+["OOP","What is the default access specifier in a C++ struct?","private","protected","public","static",2,"Struct members are public by default."],
+["OOP","A constructor has the same name as:","Object","Class","Function","Namespace",1,"The constructor name matches the class name."],
+["OOP","Does a constructor have a return type?","int","void","Class name","No",3,"Constructors do not specify a return type."],
+["OOP","When is a constructor called?","When an object is created","When a loop ends","When a file opens","When program compiles only",0,"A constructor runs during object initialization."],
+["OOP","Which constructor takes no arguments?","Copy constructor","Default constructor","Parameterized constructor","Virtual constructor",1,"A default constructor can be called without arguments."],
+["OOP","Which constructor initializes an object from another object?","Default","Copy","Private","Virtual",1,"A copy constructor creates an object from another object."],
+["OOP","Which special member function is called when an object is destroyed?","Constructor","Destructor","Main","Friend",1,"The destructor handles object cleanup."],
+["OOP","Which symbol identifies a destructor?","!","~","#","&",1,"A destructor starts with a tilde."],
+["OOP","Can a class have multiple constructors with different parameters?","Yes","No","Only two","Only private",0,"Constructor overloading is allowed."],
+["OOP","Function overloading means:","Same name, different parameter lists","Different names only","Same return type only","Same body only",0,"Overloaded functions have different parameter lists."],
+["OOP","Which type of polymorphism is achieved through function overloading?","Runtime","Compile-time","Dynamic only","None",1,"Overload resolution happens at compile time."],
+["OOP","Which keyword enables runtime polymorphism using member functions?","static","virtual","friend","inline",1,"Virtual functions support dynamic dispatch."],
+["OOP","A virtual function is generally declared in:","Base class","Only main","Header guard","Loop",0,"A base class can declare a virtual function for overriding."],
+["OOP","Function overriding occurs when:","Derived class redefines a base class function","Two functions have different names","A variable changes","A constructor is copied",0,"Overriding provides a derived implementation of a base virtual function."],
+["OOP","Which inheritance has one base and one derived class?","Multiple","Single","Hybrid","Hierarchical",1,"Single inheritance has one direct base class."],
+["OOP","Which inheritance has one derived class inheriting from two base classes?","Single","Multilevel","Multiple","Hierarchical",2,"Multiple inheritance uses more than one base class."],
+["OOP","In multilevel inheritance:","One class inherits through a chain of classes","Many classes have no relation","One class has no base","Only objects inherit",0,"Inheritance occurs across multiple levels."],
+["OOP","Which keyword is used to declare a friend function?","friend","virtual","this","class",0,"The friend keyword grants access to private and protected members."],
+["OOP","What does the this pointer refer to?","Base class","Current object","Next object","Main function",1,"this points to the current object."],
+["OOP","Which operator is used to access a static member using a class name?","Dot","Arrow","Scope resolution ::","Address &",2,"The scope resolution operator accesses class static members."],
+["OOP","Can a static data member be shared by all objects of a class?","Yes","No","Only in main","Only in derived class",0,"A static data member belongs to the class."],
+["OOP","Which operator is commonly overloaded for output using cout?","<<",">>","&&","%",0,"The insertion operator is overloaded for stream output."],
+["OOP","Which class cannot be instantiated directly if it has a pure virtual function?","Abstract class","Derived class","Friend class","Nested class",0,"An abstract class cannot be instantiated directly."],
+
+/* ================= DATA STRUCTURES: 35 ABSOLUTE BASICS ================= */
+["Data Structures","What is a data structure?","A way to organize and store data","A programming language","An operating system","A computer part",0,"A data structure organizes and stores data."],
+["Data Structures","Which of these is a data structure?","Array","Compiler","Browser","Keyboard",0,"An array is a data structure."],
+["Data Structures","Which of these is a linear data structure?","Tree","Graph","Array","None",2,"Array elements are arranged in a sequence."],
+["Data Structures","Which of these is a non-linear data structure?","Array","Stack","Queue","Tree",3,"A tree represents hierarchical relationships."],
+["Data Structures","Which data structure stores elements in a sequence?","Array","Graph","Tree","None",0,"An array stores elements in an indexed sequence."],
+["Data Structures","What is the main feature of an array?","Elements accessed by index","Only one element","No memory","Stores functions only",0,"Array elements are accessed using indices."],
+["Data Structures","Array indexing in C++ normally starts from:","1","0","-1","10",1,"Array indexing starts at zero."],
+["Data Structures","Which data structure follows LIFO?","Queue","Stack","Array","Tree",1,"Stack follows Last In First Out."],
+["Data Structures","Which data structure follows FIFO?","Stack","Queue","Tree","Graph",1,"Queue follows First In First Out."],
+["Data Structures","Which operation inserts an element into a stack?","Push","Pop","Dequeue","Delete",0,"Push inserts an element into a stack."],
+["Data Structures","Which operation removes an element from a stack?","Push","Pop","Enqueue","Insert",1,"Pop removes the top element."],
+["Data Structures","Which operation inserts an element into a queue?","Pop","Push","Enqueue","Dequeue",2,"Enqueue inserts an element into a queue."],
+["Data Structures","Which operation removes an element from a queue?","Push","Pop","Enqueue","Dequeue",3,"Dequeue removes an element from a queue."],
+["Data Structures","What is the top position in a stack used for?","To access the top element","To sort data","To create a tree","To store a graph",0,"The top identifies the current top stack element."],
+["Data Structures","Which data structure is commonly used for a printer queue?","Stack","Queue","Tree","Graph",1,"Print jobs are commonly processed in arrival order."],
+["Data Structures","Which real-life example represents a stack?","People standing in a line","Stack of plates","Road map","Family tree",1,"The last plate placed is usually removed first."],
+["Data Structures","Which real-life example represents a queue?","Stack of books","People waiting in a line","Undo operation","Browser back history",1,"People waiting in line follow FIFO."],
+["Data Structures","What is a linked list made up of?","Nodes","Only arrays","Only functions","Only loops",0,"A linked list consists of connected nodes."],
+["Data Structures","A node in a linked list generally contains:","Data and link","Only a loop","Only a function","Only a class name",0,"A node stores data and a link to another node."],
+["Data Structures","In a singly linked list, a node points to:","Previous and next nodes","Next node","All nodes","No node",1,"A singly linked node has a next link."],
+["Data Structures","Which linked list supports movement in both directions?","Singly linked list","Doubly linked list","Simple array","Stack",1,"A doubly linked list has previous and next links."],
+["Data Structures","Which linked list has its last node connected back to the first?","Circular linked list","Simple array","Stack","Linear queue",0,"A circular linked list forms a loop."],
+["Data Structures","Which data structure represents hierarchical relationships?","Stack","Queue","Tree","Array",2,"Trees represent parent-child relationships."],
+["Data Structures","In a tree, the topmost node is called:","Leaf","Root","Edge","Child",1,"The root is the topmost node."],
+["Data Structures","A node with no children is called:","Root","Parent","Leaf","Edge",2,"A leaf node has no children."],
+["Data Structures","A connection between two nodes in a tree is called:","Edge","Root","Leaf","Index",0,"An edge connects nodes."],
+["Data Structures","A binary tree node can have at most how many children?","1","2","3","4",1,"A binary tree allows at most two children."],
+["Data Structures","In a tree, a node directly below another node is its:","Parent","Child","Root","Edge",1,"A child is directly below its parent."],
+["Data Structures","Which structure represents connections between cities or people?","Stack","Queue","Graph","Array",2,"Graphs represent relationships and connections."],
+["Data Structures","A graph contains:","Vertices and edges","Only arrays","Only roots","Only queues",0,"A graph consists of vertices and edges."],
+["Data Structures","In a graph, a vertex represents:","A node","A sorting method","A loop","An array index",0,"Vertices are the nodes of a graph."],
+["Data Structures","Which data structure stores data in key-value pairs?","Stack","Queue","Hash table","Simple queue",2,"Hash tables store key-value associations."],
+["Data Structures","Which data structure is commonly used to implement undo operations?","Stack","Queue","Graph","Tree",0,"Undo operations commonly follow LIFO."],
+["Data Structures","Which data structure is commonly used in a waiting-line system?","Stack","Queue","Tree","Graph",1,"A queue processes items in arrival order."],
+["Data Structures","Which of the following is a basic operation on data structures?","Insertion","Compilation","Booting","Formatting",0,"Insertion adds an element to a data structure."]
+];
+
+// ================= TEST ENGINE =================
+
+let current=0;
+let answers={};
+let timeLeft=70*60;
+let interval=null;
+let stream=null;
+let submitted=false;
+
+const el=id=>document.getElementById(id);
+
+async function enableCamera(){
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)
+   throw new Error("Use HTTPS or localhost to access camera.");
+  stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+  el("video").srcObject=stream;
+  el("cameraStatus").textContent="✅ Camera enabled";
+  el("cameraStatus").style.color="green";
+ }catch(e){
+  el("cameraStatus").textContent="❌ "+e.message;
+  el("cameraStatus").style.color="red";
+ }
+}
+
+function stopCamera(){
+ if(stream){
+  stream.getTracks().forEach(t=>t.stop());
+  stream=null;
+ }
+ el("video").srcObject=null;
+ el("cameraStatus").textContent="Camera stopped.";
+}
+
+function startTest(){
+ if(!el("name").value.trim()||!el("roll").value.trim()){
+  alert("Enter student name and roll number.");
+  return;
+ }
+ if(!confirm("Start your 70-minute examination?"))return;
+
+ el("setup").classList.add("hidden");
+ el("test").classList.remove("hidden");
+ el("studentInfo").textContent=el("name").value+" | "+el("roll").value;
+ render();
+ interval=setInterval(()=>{
+  timeLeft--;
+  let m=Math.floor(timeLeft/60);
+  let s=timeLeft%60;
+  el("timer").textContent=
+   String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  if(timeLeft<=0){
+   clearInterval(interval);
+   alert("Time is over. Test submitted.");
+   finish();
+  }
+ },1000);
+}
+
+function render(){
+ const q=Q[current];
+ el("number").textContent=current+1;
+ el("section").textContent=q[0];
+ el("question").textContent=(current+1)+". "+q[1];
+ el("bar").style.width=((current+1)/100*100)+"%";
+ el("options").innerHTML="";
+
+ for(let i=0;i<4;i++){
+  const label=document.createElement("label");
+  label.className="option"+(answers[current]===i?" selected":"");
+  const radio=document.createElement("input");
+  radio.type="radio";
+  radio.name="answer";
+  radio.checked=answers[current]===i;
+  radio.addEventListener("change",()=>{
+   answers[current]=i;
+   render();
+  });
+  label.append(radio,document.createTextNode(
+   String.fromCharCode(65+i)+". "+q[i+2]
+  ));
+  el("options").appendChild(label);
+ }
+ el("count").textContent=Object.keys(answers).length;
+ renderPalette();
+}
+
+function renderPalette(){
+ el("palette").innerHTML="";
+ Q.forEach((q,i)=>{
+  const b=document.createElement("button");
+  b.textContent=i+1;
+  if(answers[i]!==undefined)b.classList.add("answered");
+  if(i===current)b.classList.add("current");
+  b.onclick=()=>{current=i;render()};
+  el("palette").appendChild(b);
+ });
+}
+
+function next(){
+ if(current<99){current++;render()}
+}
+function previous(){
+ if(current>0){current--;render()}
+}
+function submitTest(){
+ if(confirm("Are you sure you want to submit?"))finish();
+}
+
+function finish(){
+ if(submitted)return;
+ submitted=true;
+ clearInterval(interval);
+
+ let correct=0,wrong=0,skip=0;
+ Q.forEach((q,i)=>{
+  if(answers[i]===undefined)skip++;
+  else if(answers[i]===q[6])correct++;
+  else wrong++;
+ });
+
+ el("test").classList.add("hidden");
+ el("result").classList.remove("hidden");
+
+ el("studentResult").textContent=
+  "Student: "+el("name").value+" | Roll No: "+el("roll").value;
+ el("score").textContent=correct+"/100";
+ el("percentage").textContent="Percentage: "+correct+"%";
+ el("summary").innerHTML=
+  "<p>✅ Correct: "+correct+
+  " &nbsp; ❌ Wrong: "+wrong+
+  " &nbsp; ⏭ Unattempted: "+skip+"</p>";
+
+ el("message").textContent=
+  correct>=80?"Excellent performance! 🌟":
+  correct>=60?"Good work! Keep practising. 👍":
+  correct>=40?"You need more practice. 💪":
+  "Keep learning. You can improve! 📚";
+
+ el("review").innerHTML="";
+ Q.forEach((q,i)=>{
+  const div=document.createElement("div");
+  div.className="review";
+  const heading=document.createElement("b");
+  heading.textContent=(i+1)+". ["+q[0]+"] "+q[1];
+
+  const your=document.createElement("p");
+  let ua=answers[i];
+  your.className=ua===q[6]?"correct":"wrong";
+  your.textContent="Your answer: "+(ua===undefined?"Not attempted":q[ua+2]);
+
+  const right=document.createElement("p");
+  right.className="correct";
+  right.textContent="Correct answer: "+q[q[6]+2];
+
+  const exp=document.createElement("p");
+  exp.textContent="Explanation: "+q[7];
+
+  div.append(heading,your,right,exp);
+  el("review").appendChild(div);
+ });
+ stopCamera();
+ window.scrollTo(0,0);
+}
+
+function retest(){
+ current=0;
+ answers={};
+ timeLeft=70*60;
+ submitted=false;
+ el("result").classList.add("hidden");
+ el("setup").classList.remove("hidden");
+ el("name").value="";
+ el("roll").value="";
+ el("timer").textContent="70:00";
+ el("bar").style.width="0%";
+ el("review").innerHTML="";
+ window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
